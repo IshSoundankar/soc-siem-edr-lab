@@ -1,0 +1,35 @@
+# Proposed LimaCharlie D&R rule: privileged group addition via net.exe
+# Status: proposed in TKT-009, not yet deployed or tested.
+# Gap: the managed Sigma recon rule skips command lines containing "/add",
+# so adding a user to Domain Admins with net.exe raised no detection.
+
+detect:
+  event: NEW_PROCESS
+  op: and
+  rules:
+    - op: or
+      rules:
+        - op: ends with
+          path: event/FILE_PATH
+          value: \net.exe
+          case sensitive: false
+        - op: ends with
+          path: event/FILE_PATH
+          value: \net1.exe
+          case sensitive: false
+    - op: contains
+      path: event/COMMAND_LINE
+      value: " group "
+      case sensitive: false
+    - op: contains
+      path: event/COMMAND_LINE
+      value: domain admins
+      case sensitive: false
+    - op: contains
+      path: event/COMMAND_LINE
+      value: /add
+      case sensitive: false
+
+respond:
+  - action: report
+    name: priv-group-add-domain-admins
